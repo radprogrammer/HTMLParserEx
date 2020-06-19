@@ -281,17 +281,20 @@ type
   TSourceContext = record
   private
     function GetCharOfCurrent(Index: Integer): Char; inline;
+    function PassedEndOfSourceCode: Boolean; inline;
   public
-    Code: string;
-    CodeIndex: Integer;
+    SourceCode: string;
+    CharIndex: Integer;
     LineNum: Integer;
     ColNum: Integer;
     CurrentChar: Char;
-{$IFDEF DEBUG}
+    {$IFDEF DEBUG}
     currentCode: PChar;
-{$ENDIF}
-    procedure IncSrc(); overload; inline;
-    procedure IncSrc(Step: Integer); overload; inline;
+    {$ENDIF}
+    // Jump to the next char and return true if not exceeding the end of SourceCode
+    function JumpToNextChar: Boolean; overload; inline;
+    // Jump multiple characters, and return the jumped steps
+    function JumpToNextChar(Step: Integer): Integer; overload; inline;
     procedure setCode(const ACode: string); inline;
     function ReadStr(UntilChars: TSysCharSet): string; inline;
     function PeekStr(Index: Integer): string; overload; inline;
@@ -604,7 +607,7 @@ begin
     sc.SkipBlank;
     if sc.CurrentChar = '=' then
     begin
-      sc.IncSrc;
+      sc.JumpToNextChar;
       sc.SkipBlank;
       Item.Value := sc.ReadStr((WhiteSpace + [#0]));
     end;
@@ -754,7 +757,7 @@ var
     Result := false;
     if sc.charOfCurrent[1] = '/' then
     begin
-      Result := UpperCase(sc.subStr(sc.CodeIndex + 2, Length(TagName)))
+      Result := UpperCase(sc.subStr(sc.CharIndex + 2, Length(TagName)))
         = UpperCase(TagName);
     end;
   end;
@@ -782,7 +785,7 @@ var
         Result := True;
         Break;
       end;
-      sc.IncSrc;
+      sc.JumpToNextChar;
     end;
   end;
 
@@ -790,10 +793,10 @@ var
   var
     oldIndex: Integer;
   begin
-    oldIndex := sc.CodeIndex;
+    oldIndex := sc.CharIndex;
     if sc.subStr(4) = '<!--' then
     begin
-      sc.IncSrc(5);
+      sc.JumpToNextChar(5);
       while True do
       begin
         if sc.CurrentChar = #0 then
@@ -802,12 +805,12 @@ var
         begin
           if (sc.charOfCurrent[-1] = '-') and (sc.charOfCurrent[-2] = '-') then
           begin
-            sc.IncSrc;
+            sc.JumpToNextChar;
             sc.SkipBlank();
             Break;
           end;
         end;
-        sc.IncSrc;
+        sc.JumpToNextChar;
       end;
     end
     else
@@ -826,9 +829,9 @@ var
               end;
             end;
         end;
-        sc.IncSrc;
+        sc.JumpToNextChar;
       end;
-    Result := sc.subStr(oldIndex, sc.CodeIndex - oldIndex);
+    Result := sc.subStr(oldIndex, sc.CharIndex - oldIndex);
   end;
 
   function ParserScriptData(): string;
@@ -837,12 +840,12 @@ var
     stringChar: Char;
     PreIsblique: Boolean;
   begin
-    oldIndex := sc.CodeIndex;
+    oldIndex := sc.CharIndex;
     stringChar := #0;
     sc.SkipBlank();
     if sc.subStr(4) = '<!--' then
     begin
-      sc.IncSrc(5);
+      sc.JumpToNextChar(5);
       while True do
       begin
         if sc.CurrentChar = #0 then
@@ -851,12 +854,12 @@ var
         begin
           if (sc.charOfCurrent[-1] = '-') and (sc.charOfCurrent[-2] = '-') then
           begin
-            sc.IncSrc;
+            sc.JumpToNextChar;
             sc.SkipBlank();
             Break;
           end;
         end;
-        sc.IncSrc;
+        sc.JumpToNextChar;
       end;
     end
     else
@@ -870,7 +873,7 @@ var
             begin
               stringChar := sc.CurrentChar;
               PreIsblique := false;
-              sc.IncSrc();
+              sc.JumpToNextChar();
               while True do
               begin
                 if sc.CurrentChar = #0 then
@@ -881,12 +884,12 @@ var
                   PreIsblique := not PreIsblique
                 else
                   PreIsblique := false;
-                sc.IncSrc;
+                sc.JumpToNextChar;
               end;
             end;
           '/': // 注释
             begin
-              sc.IncSrc();
+              sc.JumpToNextChar();
               case sc.CurrentChar of
                 '/': // 行注释
                   begin
@@ -896,13 +899,13 @@ var
                       begin
                         Break;
                       end;
-                      sc.IncSrc();
+                      sc.JumpToNextChar();
                     end;
                   end;
                 '*': // 块注释
                   begin
-                    sc.IncSrc();
-                    sc.IncSrc();
+                    sc.JumpToNextChar();
+                    sc.JumpToNextChar();
                     while True do
                     begin
                       if sc.CurrentChar = #0 then
@@ -912,7 +915,7 @@ var
                       begin
                         Break;
                       end;
-                      sc.IncSrc();
+                      sc.JumpToNextChar();
                     end;
                   end;
               end;
@@ -925,10 +928,10 @@ var
               end;
             end;
         end;
-        sc.IncSrc();
+        sc.JumpToNextChar();
       end;
     end;
-    Result := sc.subStr(oldIndex, sc.CodeIndex - oldIndex)
+    Result := sc.subStr(oldIndex, sc.CharIndex - oldIndex)
   end;
 
 var
@@ -938,10 +941,10 @@ var
   Tag: THtmlElement;
 begin
   sc.setCode(Source);
-  while sc.CodeIndex <= high(sc.Code) do
+  while sc.CharIndex <= high(sc.SourceCode) do
   begin
     ElementType := EtUnknow;
-    OldCodeIndex := sc.CodeIndex;
+    OldCodeIndex := sc.CharIndex;
     BeginLineNum := sc.LineNum;
     BeginColNum := sc.ColNum;
     if sc.CurrentChar = #0 then
@@ -949,15 +952,15 @@ begin
     // "<"开头的就是Tag之类的
     if sc.CurrentChar = '<' then
     begin
-      sc.IncSrc;
+      sc.JumpToNextChar;
       if sc.CurrentChar = '!' then // 注释
       begin
         ElementType := EtComment;
-        sc.IncSrc;
+        sc.JumpToNextChar;
         case sc.CurrentChar of
           '-': // <!--  -->
             begin
-              sc.IncSrc; // -
+              sc.JumpToNextChar; // -
               while True do
               begin
                 if not PosCharInTag('>') then
@@ -966,15 +969,15 @@ begin
                 else if (sc.charOfCurrent[-1] = '-') and
                   (sc.charOfCurrent[-2] = '-') then
                 begin
-                  sc.IncSrc;
+                  sc.JumpToNextChar;
                   Break;
                 end;
-                sc.IncSrc;
+                sc.JumpToNextChar;
               end;
             end;
           '[': // <![CDATA[.....]]>
             begin
-              sc.IncSrc; //
+              sc.JumpToNextChar; //
               while True do
               begin
                 if not PosCharInTag('>') then
@@ -982,10 +985,10 @@ begin
                     sc.subStr(100))
                 else if (sc.charOfCurrent[-1] = ']') then
                 begin
-                  sc.IncSrc;
+                  sc.JumpToNextChar;
                   Break;
                 end;
-                sc.IncSrc;
+                sc.JumpToNextChar;
               end;
             end;
         else // <!.....>
@@ -993,18 +996,18 @@ begin
             if UpperCase(sc.PeekStr()) = 'DOCTYPE' then
             begin
               ElementType := EtDocType;
-              sc.IncSrc; //
+              sc.JumpToNextChar; //
               if PosCharInTag('>') then
-                sc.IncSrc
+                sc.JumpToNextChar
               else
                 DoError('LineNum:' + IntToStr(BeginLineNum) + '无法找到Tag结束点:' +
                   sc.subStr(100));
             end
             else
             begin
-              sc.IncSrc; //
+              sc.JumpToNextChar; //
               if PosCharInTag('>') then
-                sc.IncSrc
+                sc.JumpToNextChar
               else
                 DoError('LineNum:' + IntToStr(BeginLineNum) + '无法找到Tag结束点:' +
                   sc.subStr(100));
@@ -1016,7 +1019,7 @@ begin
       else if sc.CurrentChar = '?' then // <?...?>  XML
       begin
         ElementType := EtComment;
-        sc.IncSrc; //
+        sc.JumpToNextChar; //
         while True do
         begin
           if not PosCharInTag('>') then
@@ -1024,23 +1027,23 @@ begin
               sc.subStr(100))
           else if (sc.charOfCurrent[-1] = '?') then
           begin
-            sc.IncSrc;
+            sc.JumpToNextChar;
             Break;
           end;
-          sc.IncSrc;
+          sc.JumpToNextChar;
         end;
       end
       else // 正常节点
       begin
         ElementType := EtTag;
-        sc.IncSrc;
+        sc.JumpToNextChar;
         if PosCharInTag('>') then
-          sc.IncSrc
+          sc.JumpToNextChar
         else
           DoError('LineNum:' + IntToStr(BeginLineNum) + '无法找到Tag结束点:' +
             sc.subStr(100));
       end;
-      tmp := sc.subStr(OldCodeIndex, sc.CodeIndex - OldCodeIndex);
+      tmp := sc.subStr(OldCodeIndex, sc.CharIndex - OldCodeIndex);
     end
     else // 不是"<"开头的 那就是纯文本节点
     begin
@@ -1049,9 +1052,9 @@ begin
       begin
         if CharInSet(sc.CurrentChar, [#0, '<']) then
           Break;
-        sc.IncSrc;
+        sc.JumpToNextChar;
       end;
-      tmp := sc.subStr(OldCodeIndex, sc.CodeIndex - OldCodeIndex);
+      tmp := sc.subStr(OldCodeIndex, sc.CharIndex - OldCodeIndex);
     end;
     //
     // ShowMessage(sc.subStr(30));
@@ -1547,32 +1550,32 @@ var
     tmp: string;
     stringChar: Char;
   begin
-    sc.IncSrc(); // [
+    sc.JumpToNextChar(); // [
     Result.Key := '';
     Result.AttrOperator := aoEqual;
     Result.Value := '';
     // Key
     sc.SkipBlank();
-    oldIndex := sc.CodeIndex;
+    oldIndex := sc.CharIndex;
     while not CharInSet(sc.CurrentChar,
       (WhiteSpace + OperatorChar + [']', #0])) do
-      sc.IncSrc();
-    Result.Key := sc.subStr(oldIndex, sc.CodeIndex - oldIndex);
+      sc.JumpToNextChar();
+    Result.Key := sc.subStr(oldIndex, sc.CharIndex - oldIndex);
     Result.Key := LowerCase(Result.Key);
     // Operator
     sc.SkipBlank();
-    oldIndex := sc.CodeIndex;
+    oldIndex := sc.CharIndex;
     case sc.CurrentChar of
       '=', '!', '*', '~', '|', '^', '$':
         begin
-          sc.IncSrc;
+          sc.JumpToNextChar;
           if sc.CurrentChar = '=' then
-            sc.IncSrc;
+            sc.JumpToNextChar;
         end;
       ']':
         begin
           Result.AttrOperator := aoExist;
-          sc.IncSrc;
+          sc.JumpToNextChar;
           Exit;
         end;
     else
@@ -1580,7 +1583,7 @@ var
         DoError(Format('无法解析CSS Attribute操作符[%d,%d]', [sc.LineNum, sc.ColNum]));
       end;
     end;
-    tmp := sc.subStr(oldIndex, sc.CodeIndex - oldIndex);
+    tmp := sc.subStr(oldIndex, sc.CharIndex - oldIndex);
 
     if Length(tmp) >= 1 then
     begin
@@ -1604,12 +1607,12 @@ var
 
     // Value
     sc.SkipBlank();
-    oldIndex := sc.CodeIndex;
+    oldIndex := sc.CharIndex;
     if CharInSet(sc.CurrentChar, ['"', '''']) then
       stringChar := sc.CurrentChar
     else
       stringChar := #0;
-    sc.IncSrc();
+    sc.JumpToNextChar();
     while True do
     begin
       if stringChar = #0 then
@@ -1619,12 +1622,12 @@ var
       end
       else if (sc.CurrentChar = stringChar) then
       begin
-        sc.IncSrc();
+        sc.JumpToNextChar();
         Break;
       end;
-      sc.IncSrc();
+      sc.JumpToNextChar();
     end;
-    Result.Value := sc.subStr(oldIndex, sc.CodeIndex - oldIndex);
+    Result.Value := sc.subStr(oldIndex, sc.CharIndex - oldIndex);
     // SetString(Result.Value, oldP, P - oldP);
     if (stringChar <> #0) and (Length(Result.Value) >= 2) then
       Result.Value := Copy(Result.Value, 2, Length(Result.Value) - 2);
@@ -1632,7 +1635,7 @@ var
     //
     sc.SkipBlank();
     if sc.CurrentChar = ']' then
-      sc.IncSrc
+      sc.JumpToNextChar
     else
       DoError(Format('无法解析Attribute值[%d,%d]', [sc.LineNum, sc.ColNum]));
 
@@ -1650,7 +1653,7 @@ var
           Break;
         '.': // class
           begin
-            sc.IncSrc();
+            sc.JumpToNextChar();
             pAttr := AddAttr(Item);
             pAttr^.Key := 'class';
             pAttr^.AttrOperator := aoIncludeWord;
@@ -1660,7 +1663,7 @@ var
           end;
         '#': // id
           begin
-            sc.IncSrc();
+            sc.JumpToNextChar();
             pAttr := AddAttr(Item);
             pAttr^.Key := 'id';
             pAttr^.AttrOperator := aoEqual;
@@ -1675,19 +1678,19 @@ var
           end;
         '/':
           begin
-            sc.IncSrc();
+            sc.JumpToNextChar();
             if sc.CurrentChar = '*' then // /**/
             begin
-              sc.IncSrc();
-              sc.IncSrc();
+              sc.JumpToNextChar();
+              sc.JumpToNextChar();
               while True do
               begin
                 if (sc.CurrentChar = '/') and (sc.charOfCurrent[-1] = '*') then
                 begin
-                  sc.IncSrc;
+                  sc.JumpToNextChar;
                   Break;
                 end;
-                sc.IncSrc;
+                sc.JumpToNextChar;
               end;
             end;
           end;
@@ -1731,25 +1734,25 @@ begin
     case sc.CurrentChar of
       ',':
         begin
-          sc.IncSrc();
+          sc.JumpToNextChar();
           pitems := AddItems(Result);
           pItem := AddItem(pitems^);
         end;
       '>':
         begin
-          sc.IncSrc();
+          sc.JumpToNextChar();
           pItem := AddItem(pitems^);
           pItem^.Relation := sirChildren;
         end;
       '+':
         begin
-          sc.IncSrc();
+          sc.JumpToNextChar();
           pItem := AddItem(pitems^);
           pItem^.Relation := sirYoungerBrother;
         end;
       '~':
         begin
-          sc.IncSrc();
+          sc.JumpToNextChar();
           pItem := AddItem(pitems^);
           pItem^.Relation := sirAllYoungerBrother;
         end;
@@ -2294,12 +2297,12 @@ end;
 
 function TSourceContext.subStr(Index, Count: Integer): string;
 begin
-  Result := System.Copy(Code, Index{$IF (LowStrIndex = 0)} + 1{$ENDIF}, Count);
+  Result := System.Copy(SourceCode, Index{$IF (LowStrIndex = 0)} + 1{$ENDIF}, Count);
 end;
 
 function TSourceContext.subStr(Count: Integer): string;
 begin
-  Result := subStr(CodeIndex, Count);
+  Result := subStr(CharIndex, Count);
 end;
 
 function TSourceContext.ReadStr(UntilChars: TSysCharSet): string;
@@ -2308,12 +2311,13 @@ var
   stringChar: Char;
 begin
   SkipBlank;
-  oldIndex := CodeIndex;
+  oldIndex := CharIndex;
   if CharInSet(CurrentChar, ['"', '''']) then
     stringChar := CurrentChar
   else
     stringChar := #0;
-  IncSrc;
+  JumpToNextChar;
+
   while True do
   begin
     if stringChar = #0 then
@@ -2323,23 +2327,28 @@ begin
     end
     else if (CurrentChar = stringChar) then
     begin
-      IncSrc;
+      JumpToNextChar;
       Break;
     end;
-    IncSrc;
+    JumpToNextChar;
   end;
-  Result := subStr(oldIndex, CodeIndex - oldIndex);
+  Result := subStr(oldIndex, CharIndex - oldIndex);
   if (stringChar <> #0) and (Length(Result) >= 2) then
     Result := System.Copy(Result, 2, Length(Result) - 2);
 end;
 
 function TSourceContext.GetCharOfCurrent(Index: Integer): Char;
 begin
-  Result := Code[CodeIndex + Index];
+  Result := SourceCode[CharIndex + Index];
 end;
 
-procedure TSourceContext.IncSrc;
+function TSourceContext.JumpToNextChar: Boolean;
 begin
+  // Edwin: 2020-05-06
+  if PassedEndOfSourceCode then
+    Exit(False);
+  // End Edwin: 2020-05-06
+
   if CurrentChar = #10 then
   begin
     Inc(LineNum);
@@ -2347,40 +2356,49 @@ begin
   end
   else
     Inc(ColNum);
-  Inc(CodeIndex);
 
-  CurrentChar := Code[CodeIndex];
-
-{$IFDEF DEBUG}
-  currentCode := PChar(@Code[CodeIndex]);
-{$ENDIF}
+  Inc(CharIndex);
+  Result := True;
+  if PassedEndOfSourceCode then
+    CurrentChar := #0
+  else
+  begin
+    CurrentChar := SourceCode[CharIndex];
+    {$IFDEF DEBUG}
+    currentCode := PChar(@SourceCode[CharIndex]);
+    {$ENDIF}
+  end;
 end;
 
-procedure TSourceContext.IncSrc(Step: Integer);
+function TSourceContext.JumpToNextChar(Step: Integer): Integer;
 var
   I: Integer;
 begin
+  Result := 0;
   for I := 0 to Step - 1 do
-    IncSrc();
+    if JumpToNextChar() then
+      Inc(Result)
+    else
+      Break;
 end;
 
 function TSourceContext.PeekStr: string;
 begin
-  Result := PeekStr(CodeIndex);
+  Result := PeekStr(CharIndex);
 end;
 
 procedure TSourceContext.setCode(const ACode: string);
 begin
   CurrentChar := #0;
-  Code := ACode;
+  SourceCode := ACode;
   LineNum := 1;
   ColNum := 1;
-  CodeIndex := Low(Code);
+  CharIndex := Low(SourceCode);
   if Length(ACode) > 0 then
   begin
-    CurrentChar := Code[CodeIndex];
+    CurrentChar := SourceCode[CharIndex];
 {$IFDEF DEBUG}
-    currentCode := PChar(@Code[CodeIndex]);
+    currentCode := PChar(@SourceCode[CharIndex]);
 {$ENDIF}
   end;
 end;
@@ -2391,7 +2409,7 @@ var
 begin
   Result := '';
   oldIndex := Index;
-  while not CharInSet(Code[index], (WhiteSpace + ['/', '>'])) do
+  while not CharInSet(SourceCode[index], (WhiteSpace + ['/', '>'])) do
     Inc(index);
   Result := subStr(oldIndex, index - oldIndex);
 end;
@@ -2399,7 +2417,12 @@ end;
 procedure TSourceContext.SkipBlank();
 begin
   while CharInSet(CurrentChar, WhiteSpace) do
-    IncSrc();
+    JumpToNextChar();
+end;
+
+function TSourceContext.PassedEndOfSourceCode: Boolean;
+begin
+  Result := CharIndex > High(SourceCode);
 end;
 
 
