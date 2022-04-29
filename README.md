@@ -1,6 +1,10 @@
 ﻿# htmlparser
 delphi html parser
 
+April 28, 2022 Forked from https://github.com/edwinyzh/htmlparser
+Translated Chinese strings/comments to English via Google Translate
+
+---
 The code is modified from [HtmlParser](http://www.raysoftware.cn/?p=370) of the original wr960204.
 Because of my own needs, I need to modify the html, but only support the read operation, so on this basis Modified and named HtmlParserEx.pas to distinguish it.
 
