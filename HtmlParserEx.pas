@@ -1,89 +1,95 @@
 ﻿{
-  Html解析器.
-  最近因为用到Html解析功能.在网上找了几款Delphi版本的,结果发现解析复杂的HTML都有一些问题.
-  没办法自己写了一款,经测试到现在没遇到任何解析不了的Html.
 
-  wr960204 武稀松 2013
+| April 28, 2022  RADProgrammer Note: Google translated Chinese to English comments/strings |
+
+
+Html parser.
+
+  Recently, I used the Html parsing function. I found several Delphi versions on the Internet, and found that there are some problems in parsing complex HTML.
+  There is no way to write one by myself. After testing, I have not encountered any unparseable Html.
+
+  wr960204 Wu Xisong 2013
 
   http://www.raysoftware.cn/?p=370
 
-  感谢牛人杨延哲在HTML语法和CSS语法方面的帮助.
+  Thanks to Yang Yanzhe, who helped you with HTML syntax and CSS syntax.
   Thank Yang Yanzhe.
 
   http://www.pockhero.com/
 
-  本版本只支持DelphiXE3之后的版本.如果用早期Delphi请使用HTMLParser.pas文件.
-  支持Windows,MacOSX,iOS,Android平台,完全去掉了对指针的使用.防止以后易博龙去掉
-  移动平台对指针的支持.
+  This version only supports versions after DelphiXE3. If you use earlier Delphi, please use the HTMLParser.pas file.
+  Support Windows, MacOSX, iOS, Android platforms, completely remove the use of pointers. To prevent the removal of Yi Bolong in the future
+  Mobile platform support for pointers.
 
-  脱离了对旧版本的支持,甩掉包袱开发起来真的很爽!
-  
----------------------------------------------------------------------------------
-ying32修改记录
+  It's really cool to get rid of the burden of development without supporting the old version!
+
+-------------------------------------------------- -------------------------------
+ying32 modification record
 Email:1444386932@qq.com
 
- 2017年06月20日
+ June 20, 2017
 
- 1、为IHtmlElementList增加for in 语法支持
+ 1. Add for in syntax support for IHtmlElementList
 
- 2017年05月04日
+ May 4, 2017
 
- 1、去除RegularExpressions单元的引用，不再使用TRegEx改使用RegularExpressionsCore单元中的TPerlRegEx
+ 1. Remove the reference to the RegularExpressions unit, no longer use TRegEx and use TPerlRegEx in the RegularExpressionsCore unit
 
- 2017年04月19日 
+ April 19, 2017
 
- 1、增加使用XPath功能的编译指令"UseXPath"，默认不使用XPath，个人感觉没什么用  
+ 1. Add the compilation instruction "UseXPath" that uses the XPath function. XPath is not used by default. Personally, it is useless.
 
- 2016年11月23日
+ November 23, 2016
 
- 1、简单支持XPath，简单的吧，利用xpath转css selector，嘿
-    xpath转换的代码改自python版本：https://github.com/santiycr/cssify/blob/master/cssify.py
-    另外对正则System.RegularExpressions.pas中TGroupCollection.GetItem进行了改进，没有找到命名组
-    且非PCRE_ERROR_NOSUBSTRING时返回空的，而不是抛出一个异常。暂时就简单粗爆的直接改吧，官方网站
-    上看到有人提过这个QC，不知道后面有没有解决。
+ 1. Simple support for XPath, simple, use xpath to css selector, hey
+    The code of xpath conversion is changed from the python version: https://github.com/santiycr/cssify/blob/master/cssify.py
+    In addition, the TGroupCollection.GetItem in the regular System.RegularExpressions.pas was improved, and the named group was not found
+    And non-PCRE_ERROR_NOSUBSTRING returns null instead of throwing an exception. For the time being, let's just change it directly, the official website
+    I saw someone mentioned this QC on the Internet, but I don't know if it has been solved later.
 
- 2016年11月15日
+ November 15, 2016
 
- IHtmlElement和THtmlElement的改变：
-  1、Attributes属性增加Set方法
-  2、TagName属性增加Set方法
-  3、增加Parent属性
-  4、增加RemoveAttr方法
-  5、增加Remove方法
-  6、增加RemoveChild方法
-  7、增加Find方法，此为SimpleCSSSelector的一个另名
-  8、_GetHtml不再直接附加FOrignal属性值，而是使用GetSelfHtml重新对修改后的元素进行赋值操作，并更新FOrignal的值
-  9、增加Text属性
 
-  使用例：
+Changes to IHtmlElement and THtmlElement:
+  1. Add the Set method to the Attributes attribute
+  2. Add Set method to TagName property
+  3. Add Parent property
+  4. Add RemoveAttr method
+  5. Add Remove method
+  6. Add RemoveChild method
+  7. Add the Find method, which is another name for SimpleCSSSelector
+  8. _GetHtml no longer directly attaches the value of the FORignal attribute, but uses GetSelfHtml to re-assign the modified element and update the value of FORignal
+  9. Add the Text property
+
+  Use case:
      EL.Attributes['class'] := 'xxxx';
      EL.TagName = 'a';
-     EL.Remove 移除自己
+     EL.Remove remove yourself
      EL.RemoveChild(El2);
 
      El.Find('a');
 
- IHtmlElementList和THtmlElementList的改变： 
-  1、增加RemoveAll方法
-  2、增加Remove方法
-  3、增加Each方法  
-  4、增加Text属性
-  // 使用例：
+ Changes to IHtmlElementList and THtmlElementList:
+  1. Add RemoveAll method
+  2. Add the Remove method
+  3. Add the Each method
+  4. Add the Text property
+  // use case:
 
-  // 移除选择的元素
+  // remove the selected element
   LHtml.Find('a').RemoveAll
 
-  // 查找并遍沥
+  // find and iterate
   LHtml.Find('a').Each(
     procedure(AIndex: Integer; AEl: IHtmlElement)
     begin
-      Writeln('Index=', AIndex, ',  href=', AEl.Attributes['href']);
+      Writeln('Index=', AIndex, ', href=', AEl.Attributes['href']);
     end);
 
-  // 直接输出，仅选中的第一个元素
+  // Direct output, only the first element selected
   Writeln(LHtml.Find('title').Text);
 
-}
+ }
 
 
 unit HtmlParserEx;
@@ -91,7 +97,7 @@ unit HtmlParserEx;
 {'$DEFINE UseXPath}
 
 {$IF RTLVersion < 24.0}
-  {$MESSAGE ERROR '只支持XE3及之后的版本'}
+   {$MESSAGE ERROR 'Only XE3 and later versions are supported'}
 {$ENDIF}
 
 interface
@@ -113,14 +119,14 @@ const
   // so cSpecialTagName_Text represents the fake tag name of a Text element
   cSpecialTagName_Text = '#TEXT';
 
-  LowStrIndex = Low(string); // 移动平台=0,个人电脑平台=1
+  LowStrIndex = Low(string); // Mobile platform=0, PC platform=1
 
 type
 
 {$IFNDEF MSWINDOWS}
-  { 接口使用WideString是为了可以给例如C++,VB等语言使用.
-    但是如果离开了Windows平台,其他平台是没有WideString这个COM的数据类型的.
-  }
+{ The interface uses WideString so that it can be used by languages such as C++, VB, etc.
+     But if you leave the Windows platform, other platforms do not have the COM data type of WideString.
+   }
   WideString = String;
 {$ENDIF}
   IHtmlElement = interface;
@@ -151,16 +157,14 @@ type
     function GetSourceLineNum(): Integer; stdcall;
     function GetSourceColNum(): Integer; stdcall;
 
-    // 增加移除节点
+    // Add and remove nodes
     function RemoveChild(ANode: IHtmlElement): Integer; stdcall;
     procedure Remove; stdcall;
     function AppedChild(const ATag: string): IHtmlElement; stdcall;
 
-    // 属性是否存在
+    // Does the property exist
     function HasAttribute(AttributeName: WideString): Boolean; stdcall;
-    { 用CSS选择器语法查找Element,不支持"伪类"
-      CSS Selector Style search,not support Pseudo-classes.
-
+    { Find Element using CSS selector syntax, "pseudo-class" is not supported
       http://www.w3.org/TR/CSS2/selector.html
     }
 
@@ -170,7 +174,7 @@ type
     function FindX(const AXPath: WideString): IHtmlElementList; stdcall;
 {$ENDIF}
 
-    // 枚举属性
+    // enum property
     function EnumAttributeNames(Index: Integer): WideString; stdcall;
 
     property TagName: WideString read GetTagName write SetTagName;
@@ -180,7 +184,7 @@ type
     property Content: WideString read GetContent;
     property Orignal: WideString read GetOrignal;
     property Parent: IHtmlElement read GetParent;
-    // 获取元素在源代码中的位置
+    // Get the position of an element in the source code
     property SourceLineNum: Integer read GetSourceLineNum;
     property SourceColNum: Integer read GetSourceColNum;
     //
@@ -190,7 +194,7 @@ type
     property Text: WideString read GetInnerText write SetInnerText;
 
     property Attributes[Key: WideString]: WideString read GetAttributes write SetAttributes;
-    // ying32 不改动原来的，只简化使用
+    // ying32 does not change the original, just simplifies the use
     property Attrs[Key: WideString]: WideString read GetAttributes write SetAttributes;
   end;
 
@@ -343,27 +347,25 @@ type
     function GetSourceLineNum(): Integer; stdcall;
     function GetSourceColNum(): Integer; stdcall;
 
-    // ying32添加
+    // ying32Added
     function RemoveChild(ANode: IHtmlElement): Integer; stdcall;
     procedure Remove; stdcall;
     function AppedChild(const ATag: string): IHtmlElement; stdcall;
 
 
-    // 属性是否存在
+    // Does the property exist
     function HasAttribute(AttributeName: WideString): Boolean; stdcall;
-    { 用CSS选择器语法查找Element,不支持"伪类"
-      CSS Selector Style search,not support Pseudo-classes.
-
+    { Find Element with CSS selector syntax, does not support "pseudo-class"
       http://www.w3.org/TR/CSS2/selector.html
     }
 
     function SimpleCSSSelector(const selector: WideString): IHtmlElementList; stdcall;
     function Find(const selector: WideString): IHtmlElementList; stdcall;
-{$IFDEF UseXPath}	
+{$IFDEF UseXPath}
     function FindX(const AXPath: WideString): IHtmlElementList; stdcall;
 {$ENDIF}
 
-    // 枚举属性
+    // enum property
     function EnumAttributeNames(Index: Integer): WideString; stdcall;
 
     property TagName: WideString read GetTagName write SetTagName;
@@ -373,7 +375,7 @@ type
     property Content: WideString read GetContent;
     property Orignal: WideString read GetOrignal;
     property Parent: IHtmlElement read GetParent;
-    // 获取元素在源代码中的位置
+    // Get the position of an element in the source code
     property SourceLineNum: Integer read GetSourceLineNum;
     property SourceColNum: Integer read GetSourceColNum;
     //
@@ -418,7 +420,7 @@ type
     function Add(Value: IHtmlElement): Integer; inline;
     procedure Delete(Index: Integer); inline;
     procedure Clear; inline;
-    // ying32添加
+    // ying32Added
     procedure RemoveAll; stdcall;
     procedure Remove(ANode: IHtmlElement); stdcall;
     procedure Each(f: TElementEachEvent); stdcall;
@@ -455,7 +457,7 @@ begin
         StrChar := AStr[I]
       else if StrChar = AStr[I] then
         StrChar := #0;
-    // 不在字符串中,分隔符才生效
+    // Not in the string, the delimiter takes effect
     if StrChar = #0 then
       if CharInSet(AStr[I], ACharSet) then
       begin
@@ -695,10 +697,10 @@ begin
   Result := THtmlElement.Create(AOwner, AText, ALine, ACol);
   with Result do
   begin
-    // TODO 解析TagName和属性
+    // TODO parsing TagName and attributes
     if AText = '' then
       Exit;
-    // 去掉两头的<
+    // remove the <
 
     if AText[Low(AText)] = '<' then
       AText := StrRight(AText, Length(AText) - 1);
@@ -707,7 +709,7 @@ begin
       Exit;
     if AText[High(AText)] = '>' then
       AText := StrLeft(AText, Length(AText) - 1);
-    // 检查是关闭节点,还是单个已经关闭的节点
+    // Check if a node is down, or a single down node
     if AText = '' then
       Exit;
     FClosed := AText[High(AText)] = '/';
@@ -800,7 +802,7 @@ var
       while True do
       begin
         if sc.CurrentChar = #0 then
-          DoError(Format('未完结的Style行:%d;列:%d;', [sc.LineNum, sc.ColNum]))
+          DoError(Format('Unfinished Style row: %d; Column: %d;', [sc.LineNum, sc.ColNum]))
         else if sc.CurrentChar = '>' then
         begin
           if (sc.charOfCurrent[-1] = '-') and (sc.charOfCurrent[-2] = '-') then
@@ -849,7 +851,7 @@ var
       while True do
       begin
         if sc.CurrentChar = #0 then
-          DoError(Format('未完结的Script行:%d;列:%d;', [sc.LineNum, sc.ColNum]))
+          DoError(Format('Unfinished script line: %d; column: %d;', [sc.LineNum, sc.ColNum]))
         else if sc.CurrentChar = '>' then
         begin
           if (sc.charOfCurrent[-1] = '-') and (sc.charOfCurrent[-2] = '-') then
@@ -869,7 +871,7 @@ var
         case sc.CurrentChar of
           #0:
             Break;
-          '"', '''': // 字符串
+          '"', '''': // string
             begin
               stringChar := sc.CurrentChar;
               PreIsblique := false;
@@ -887,11 +889,11 @@ var
                 sc.JumpToNextChar;
               end;
             end;
-          '/': // 注释
+          '/': // Comments
             begin
               sc.JumpToNextChar();
               case sc.CurrentChar of
-                '/': // 行注释
+                '/': // line comment
                   begin
                     while True do
                     begin
@@ -902,7 +904,7 @@ var
                       sc.JumpToNextChar();
                     end;
                   end;
-                '*': // 块注释
+                '*': // block comment
                   begin
                     sc.JumpToNextChar();
                     sc.JumpToNextChar();
@@ -949,11 +951,11 @@ begin
     BeginColNum := sc.ColNum;
     if sc.CurrentChar = #0 then
       Break;
-    // "<"开头的就是Tag之类的
+    // "<" It starts with something like Tag
     if sc.CurrentChar = '<' then
     begin
       sc.JumpToNextChar;
-      if sc.CurrentChar = '!' then // 注释
+      if sc.CurrentChar = '!' then // Comments
       begin
         ElementType := EtComment;
         sc.JumpToNextChar;
@@ -964,7 +966,7 @@ begin
               while True do
               begin
                 if not PosCharInTag('>') then
-                  DoError('LineNum:' + IntToStr(BeginLineNum) + '无法找到Tag结束点:' +
+                  DoError('LineNum:' + IntToStr(BeginLineNum) + 'Unable to find tag end point:' +
                     sc.subStr(100))
                 else if (sc.charOfCurrent[-1] = '-') and
                   (sc.charOfCurrent[-2] = '-') then
@@ -981,7 +983,7 @@ begin
               while True do
               begin
                 if not PosCharInTag('>') then
-                  DoError('LineNum:' + IntToStr(BeginLineNum) + '无法找到Tag结束点:' +
+                  DoError('LineNum:' + IntToStr(BeginLineNum) + 'Unable to find tag end point:' +
                     sc.subStr(100))
                 else if (sc.charOfCurrent[-1] = ']') then
                 begin
@@ -1000,7 +1002,7 @@ begin
               if PosCharInTag('>') then
                 sc.JumpToNextChar
               else
-                DoError('LineNum:' + IntToStr(BeginLineNum) + '无法找到Tag结束点:' +
+                DoError('LineNum:' + IntToStr(BeginLineNum) + 'Unable to find tag end point:' +
                   sc.subStr(100));
             end
             else
@@ -1009,7 +1011,7 @@ begin
               if PosCharInTag('>') then
                 sc.JumpToNextChar
               else
-                DoError('LineNum:' + IntToStr(BeginLineNum) + '无法找到Tag结束点:' +
+                DoError('LineNum:' + IntToStr(BeginLineNum) + 'Unable to find tag end point:' +
                   sc.subStr(100));
             end;
           end;
@@ -1023,7 +1025,7 @@ begin
         while True do
         begin
           if not PosCharInTag('>') then
-            DoError('LineNum:' + IntToStr(BeginLineNum) + '无法找到Tag结束点:' +
+            DoError('LineNum:' + IntToStr(BeginLineNum) + 'Unable to find tag end point:' +
               sc.subStr(100))
           else if (sc.charOfCurrent[-1] = '?') then
           begin
@@ -1033,19 +1035,19 @@ begin
           sc.JumpToNextChar;
         end;
       end
-      else // 正常节点
+      else // normal node
       begin
         ElementType := EtTag;
         sc.JumpToNextChar;
         if PosCharInTag('>') then
           sc.JumpToNextChar
         else
-          DoError('LineNum:' + IntToStr(BeginLineNum) + '无法找到Tag结束点:' +
+          DoError('LineNum:' + IntToStr(BeginLineNum) + 'Unable to find tag end point:' +
             sc.subStr(100));
       end;
       tmp := sc.subStr(OldCodeIndex, sc.CharIndex - OldCodeIndex);
     end
-    else // 不是"<"开头的 那就是纯文本节点
+    else // If it doesn't start with "<", it is a plain text node
     begin
       ElementType := EtText;
       while True do
@@ -1061,7 +1063,7 @@ begin
     case ElementType of
       EtUnknow:
         begin
-          DoError('LineNum:' + IntToStr(BeginLineNum) + '无法解析的内容:' +
+          DoError('LineNum:' + IntToStr(BeginLineNum) + 'Unparseable content:' +
             sc.subStr(100));
         end;
       EtDocType:
@@ -1077,7 +1079,7 @@ begin
           if (UpperCase(Tag.FTagName) = 'SCRIPT') and (not Tag.FIsCloseTag) and
             (not Tag.FClosed) then
           begin
-            // 读取Script
+            // read script
             BeginLineNum := sc.LineNum;
             BeginColNum := sc.ColNum;
             tmp := ParserScriptData();
@@ -1087,7 +1089,7 @@ begin
           else if (UpperCase(Tag.FTagName) = 'STYLE') and (not Tag.FIsCloseTag)
             and (not Tag.FClosed) then
           begin
-            // 读取Style
+            // read Style
             BeginLineNum := sc.LineNum;
             BeginColNum := sc.ColNum;
             tmp := ParserStyleData();
@@ -1135,7 +1137,7 @@ begin
     E := ElementList[I] as THtmlElement;
     TagProperty := GetTagProperty(E.FTagName);
 
-    // 空节点,往下找,如果下一个带Tag的节点不是它的关闭节点,那么自动关闭
+    // Empty node, look down, if the next node with Tag is not its closed node, then automatically close
     FoundIndex := -1;
     if E.FIsCloseTag then
     begin
@@ -1149,7 +1151,7 @@ begin
           Break;
         end;
       end;
-      // 如果往上找,找不到的话这个关闭Tag肯定是无意义的.
+      // If you look up and can't find it, this closing Tag is definitely meaningless.
       if FoundIndex > 0 then
       begin
         for J := (I - 1) downto FoundIndex do
@@ -1198,7 +1200,7 @@ begin
   Result := BuildTree(ElementList);
   ElementList.Free;
 end;
-{$REGION '转换表之类的'}
+{$REGION 'entity conversions'}
 
 var
   gEntities: TStringDictionary;
@@ -1580,7 +1582,7 @@ var
         end;
     else
       begin
-        DoError(Format('无法解析CSS Attribute操作符[%d,%d]', [sc.LineNum, sc.ColNum]));
+        DoError(Format('Could not resolve CSS Attribute operator [%d,%d]', [sc.LineNum, sc.ColNum]));
       end;
     end;
     tmp := sc.subStr(oldIndex, sc.CharIndex - oldIndex);
@@ -1637,7 +1639,7 @@ var
     if sc.CurrentChar = ']' then
       sc.JumpToNextChar
     else
-      DoError(Format('无法解析Attribute值[%d,%d]', [sc.LineNum, sc.ColNum]));
+      DoError(Format('Unable to parse attribute value [%d,%d]', [sc.LineNum, sc.ColNum]));
 
   end;
 
@@ -1828,7 +1830,7 @@ begin
   gTagProperty.Free;
   gEntities.Free;
 end;
-{$ENDREGION '转换表之类的'}
+{$ENDREGION 'conversion table etc.'}
 { TIHtmlElementList }
 
 function TIHtmlElementList.Add(Value: IHtmlElement): Integer;
@@ -2428,8 +2430,8 @@ end;
 
 {$IFDEF UseXPath}
 /// <summary>
-///   放在这里要主是为了区分原来的代码，
-///   转换代码来自python:https://github.com/santiycr/cssify/blob/master/cssify.py
+///  The main reason to put it here is to distinguish the original code,
+///  The conversion code is from python: https://github.com/santiycr/cssify/blob/master/cssify.py
 /// </summary>
 var
   Validation_re: TPerlRegEx;
