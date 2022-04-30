@@ -1,5 +1,5 @@
 ﻿unit HtmlParserEx;
-{ '$DEFINE UseXPath }
+{$DEFINE UseXPath }
 {$IF RTLVersion < 24.0}
 {$MESSAGE ERROR 'Only XE3 and later versions are supported'}
 {$ENDIF}
@@ -24,12 +24,6 @@ const
   LowStrIndex = low(string); // Mobile platform=0, PC platform=1
 
 type
-  {$IFNDEF MSWINDOWS}
-  { The interface uses WideString so that it can be used by languages such as C++, VB, etc.
-    But if you leave the Windows platform, other platforms do not have the COM data type of WideString.
-  }
-  WideString = string;
-  {$ENDIF}
   IHtmlElement = interface;
   IHtmlElementList = interface;
   TElementEachEvent = reference to procedure(AIndex:Integer; AEl:IHtmlElement);
@@ -38,19 +32,19 @@ type
   IHtmlElement = interface
     ['{8C75239C-8CFA-499F-B115-7CEBEDFB421B}']
     function GetParent:IHtmlElement; stdcall;
-    function GetTagName:WideString; stdcall;
-    procedure SetTagName(Value:WideString); stdcall;
-    function GetContent:WideString; stdcall;
-    function GetOrignal:WideString; stdcall;
+    function GetTagName:String; stdcall;
+    procedure SetTagName(Value:String); stdcall;
+    function GetContent:String; stdcall;
+    function GetOrignal:String; stdcall;
     function GetChildrenCount:Integer; stdcall;
     function GetChildren(Index:Integer):IHtmlElement; stdcall;
     function GetCloseTag:IHtmlElement; stdcall;
-    function GetInnerHtml():WideString; stdcall;
-    function GetOuterHtml():WideString; stdcall;
-    function GetInnerText():WideString; stdcall;
-    procedure SetInnerText(Value:WideString); stdcall;
-    function GetAttributes(Key:WideString):WideString; stdcall;
-    procedure SetAttributes(Key:WideString; Value:WideString); stdcall;
+    function GetInnerHtml():String; stdcall;
+    function GetOuterHtml():String; stdcall;
+    function GetInnerText():String; stdcall;
+    procedure SetInnerText(Value:String); stdcall;
+    function GetAttributes(Key:String):String; stdcall;
+    procedure SetAttributes(Key:String; Value:String); stdcall;
     procedure RemoveAttr(AAttrName:string); stdcall;
     function GetSourceLineNum():Integer; stdcall;
     function GetSourceColNum():Integer; stdcall;
@@ -59,35 +53,35 @@ type
     procedure Remove; stdcall;
     function AppedChild(const ATag:string):IHtmlElement; stdcall;
     // Does the property exist
-    function HasAttribute(AttributeName:WideString):Boolean; stdcall;
+    function HasAttribute(AttributeName:String):Boolean; stdcall;
     { Find Element using CSS selector syntax, "pseudo-class" is not supported
       http://www.w3.org/TR/CSS2/selector.html
     }
-    function SimpleCSSSelector(const selector:WideString):IHtmlElementList; stdcall;
-    function Find(const selector:WideString):IHtmlElementList; stdcall;
+    function SimpleCSSSelector(const selector:String):IHtmlElementList; stdcall;
+    function Find(const selector:String):IHtmlElementList; stdcall;
     {$IFDEF UseXPath}
-    function FindX(const AXPath:WideString):IHtmlElementList; stdcall;
+    function FindX(const AXPath:String):IHtmlElementList; stdcall;
     {$ENDIF}
     // enum property
-    function EnumAttributeNames(Index:Integer):WideString; stdcall;
-    property TagName:WideString read GetTagName write SetTagName;
+    function EnumAttributeNames(Index:Integer):String; stdcall;
+    property TagName:String read GetTagName write SetTagName;
     property ChildrenCount:Integer read GetChildrenCount;
     property Children[index:Integer]:IHtmlElement read GetChildren; default;
     property CloseTag:IHtmlElement read GetCloseTag;
-    property Content:WideString read GetContent;
-    property Orignal:WideString read GetOrignal;
+    property Content:String read GetContent;
+    property Orignal:String read GetOrignal;
     property Parent:IHtmlElement read GetParent;
     // Get the position of an element in the source code
     property SourceLineNum:Integer read GetSourceLineNum;
     property SourceColNum:Integer read GetSourceColNum;
     //
-    property InnerHtml:WideString read GetInnerHtml;
-    property OuterHtml:WideString read GetOuterHtml;
-    property InnerText:WideString read GetInnerText write SetInnerText;
-    property Text:WideString read GetInnerText write SetInnerText;
-    property Attributes[Key:WideString]:WideString read GetAttributes write SetAttributes;
+    property InnerHtml:String read GetInnerHtml;
+    property OuterHtml:String read GetOuterHtml;
+    property InnerText:String read GetInnerText write SetInnerText;
+    property Text:String read GetInnerText write SetInnerText;
+    property Attributes[Key:String]:String read GetAttributes write SetAttributes;
     // ying32 does not change the original, just simplifies the use
-    property Attrs[Key:WideString]:WideString read GetAttributes write SetAttributes;
+    property Attrs[Key:String]:String read GetAttributes write SetAttributes;
   end;
 
 
@@ -110,15 +104,15 @@ type
     procedure RemoveAll; stdcall;
     procedure Remove(ANode:IHtmlElement); stdcall;
     procedure Each(f:TElementEachEvent); stdcall;
-    function GetText:WideString; stdcall;
+    function GetText:String; stdcall;
     function GetEnumerator:THtmlListEnumerator;
-    property Text:WideString read GetText;
+    property Text:String read GetText;
     property Count:Integer read GetCount;
     property Items[index:Integer]:IHtmlElement read GetItems; default;
   end;
 
 
-function ParserHTML(const Source:WideString):IHtmlElement; stdcall;
+function ParserHTML(const Source:String):IHtmlElement; stdcall;
 function DecodeHtmlEntities(S:string):string; forward;
 
 implementation
@@ -217,19 +211,19 @@ type
   protected
     // ying32
     function GetParent:IHtmlElement; stdcall;
-    function GetTagName:WideString; stdcall;
-    procedure SetTagName(Value:WideString); stdcall;
-    function GetContent:WideString; stdcall;
-    function GetOrignal:WideString; stdcall;
+    function GetTagName:String; stdcall;
+    procedure SetTagName(Value:String); stdcall;
+    function GetContent:String; stdcall;
+    function GetOrignal:String; stdcall;
     function GetChildrenCount:Integer; stdcall;
     function GetChildren(Index:Integer):IHtmlElement; stdcall;
     function GetCloseTag:IHtmlElement; stdcall;
-    function GetInnerHtml():WideString; stdcall;
-    function GetOuterHtml():WideString; stdcall;
-    function GetInnerText():WideString; stdcall;
-    procedure SetInnerText(Value:WideString); stdcall;
-    function GetAttributes(Key:WideString):WideString; stdcall;
-    procedure SetAttributes(Key:WideString; Value:WideString); stdcall;
+    function GetInnerHtml():String; stdcall;
+    function GetOuterHtml():String; stdcall;
+    function GetInnerText():String; stdcall;
+    procedure SetInnerText(Value:String); stdcall;
+    function GetAttributes(Key:String):String; stdcall;
+    procedure SetAttributes(Key:String; Value:String); stdcall;
     procedure RemoveAttr(AAttrName:string); stdcall;
     function GetSourceLineNum():Integer; stdcall;
     function GetSourceColNum():Integer; stdcall;
@@ -239,32 +233,32 @@ type
     function AppedChild(const ATag:string):IHtmlElement; stdcall;
 
     // Does the property exist
-    function HasAttribute(AttributeName:WideString):Boolean; stdcall;
+    function HasAttribute(AttributeName:String):Boolean; stdcall;
     { Find Element with CSS selector syntax, does not support "pseudo-class"
       http://www.w3.org/TR/CSS2/selector.html
     }
-    function SimpleCSSSelector(const selector:WideString):IHtmlElementList; stdcall;
-    function Find(const selector:WideString):IHtmlElementList; stdcall;
+    function SimpleCSSSelector(const selector:String):IHtmlElementList; stdcall;
+    function Find(const selector:String):IHtmlElementList; stdcall;
     {$IFDEF UseXPath}
-    function FindX(const AXPath:WideString):IHtmlElementList; stdcall;
+    function FindX(const AXPath:String):IHtmlElementList; stdcall;
     {$ENDIF}
     // enum property
-    function EnumAttributeNames(Index:Integer):WideString; stdcall;
-    property TagName:WideString read GetTagName write SetTagName;
+    function EnumAttributeNames(Index:Integer):String; stdcall;
+    property TagName:String read GetTagName write SetTagName;
     property ChildrenCount:Integer read GetChildrenCount;
     property Children[index:Integer]:IHtmlElement read GetChildren; default;
     property CloseTag:IHtmlElement read GetCloseTag;
-    property Content:WideString read GetContent;
-    property Orignal:WideString read GetOrignal;
+    property Content:String read GetContent;
+    property Orignal:String read GetOrignal;
     property Parent:IHtmlElement read GetParent;
     // Get the position of an element in the source code
     property SourceLineNum:Integer read GetSourceLineNum;
     property SourceColNum:Integer read GetSourceColNum;
     //
-    property InnerHtml:WideString read GetInnerHtml;
-    property OuterHtml:WideString read GetOuterHtml;
-    property InnerText:WideString read GetInnerText;
-    property Attributes[Key:WideString]:WideString read GetAttributes write SetAttributes;
+    property InnerHtml:String read GetInnerHtml;
+    property OuterHtml:String read GetOuterHtml;
+    property InnerText:String read GetInnerText;
+    property Attributes[Key:String]:String read GetAttributes write SetAttributes;
     property Childrens:IHtmlElementList read GetChildrens;
   private
     FClosed:Boolean;
@@ -305,7 +299,7 @@ type
     procedure RemoveAll; stdcall;
     procedure Remove(ANode:IHtmlElement); stdcall;
     procedure Each(f:TElementEachEvent); stdcall;
-    function GetText:WideString; stdcall;
+    function GetText:String; stdcall;
   public
     constructor Create;
     destructor Destroy; override;
@@ -1040,7 +1034,7 @@ begin
 end;
 
 
-function ParserHTML(const Source:WideString):IHtmlElement; stdcall;
+function ParserHTML(const Source:String):IHtmlElement; stdcall;
 var
   ElementList:THtmlElementList;
 begin
@@ -1592,7 +1586,7 @@ begin
 end;
 
 
-function TIHtmlElementList.GetText:WideString;
+function TIHtmlElementList.GetText:String;
 var
   LEL:IHtmlElement;
 begin
@@ -1673,7 +1667,7 @@ begin
 end;
 
 
-function THtmlElement.EnumAttributeNames(Index:Integer):WideString;
+function THtmlElement.EnumAttributeNames(Index:Integer):String;
 var
   Attrs:TStringDynArray;
 begin
@@ -1684,7 +1678,7 @@ begin
 end;
 
 
-function THtmlElement.GetAttributes(Key:WideString):WideString;
+function THtmlElement.GetAttributes(Key:String):String;
 begin
   Result := '';
   Key := LowerCase(Key);
@@ -1717,7 +1711,7 @@ begin
 end;
 
 
-function THtmlElement.GetContent:WideString;
+function THtmlElement.GetContent:String;
 begin
   Result := FContent;
 end;
@@ -1878,7 +1872,7 @@ begin
 end;
 
 
-function THtmlElement.GetInnerHtml:WideString;
+function THtmlElement.GetInnerHtml:String;
 var
   Sb:TStringBuilder;
 begin
@@ -1889,7 +1883,7 @@ begin
 end;
 
 
-function THtmlElement.GetInnerText:WideString;
+function THtmlElement.GetInnerText:String;
 var
   Sb:TStringBuilder;
 begin
@@ -1900,13 +1894,13 @@ begin
 end;
 
 
-function THtmlElement.GetOrignal:WideString;
+function THtmlElement.GetOrignal:String;
 begin
   Result := FOrignal;
 end;
 
 
-function THtmlElement.GetOuterHtml:WideString;
+function THtmlElement.GetOuterHtml:String;
 var
   Sb:TStringBuilder;
 begin
@@ -1935,13 +1929,13 @@ begin
 end;
 
 
-function THtmlElement.GetTagName:WideString;
+function THtmlElement.GetTagName:String;
 begin
   Result := FTagName;
 end;
 
 
-function THtmlElement.HasAttribute(AttributeName:WideString):Boolean;
+function THtmlElement.HasAttribute(AttributeName:String):Boolean;
 begin
   Result := FAttributes.ContainsKey(LowerCase(AttributeName));
 end;
@@ -1973,19 +1967,19 @@ begin
 end;
 
 
-procedure THtmlElement.SetAttributes(Key:WideString; Value:WideString);
+procedure THtmlElement.SetAttributes(Key:String; Value:String);
 begin
   FAttributes.AddOrSetValue(LowerCase(Key), Value);
 end;
 
 
-procedure THtmlElement.SetInnerText(Value:WideString);
+procedure THtmlElement.SetInnerText(Value:String);
 begin
   FContent := Value;
 end;
 
 
-procedure THtmlElement.SetTagName(Value:WideString);
+procedure THtmlElement.SetTagName(Value:String);
 begin
   FTagName := UpperCase(Value);
   if FCloseTag <> nil then
@@ -1993,7 +1987,7 @@ begin
 end;
 
 
-function THtmlElement.SimpleCSSSelector(const selector:WideString):IHtmlElementList;
+function THtmlElement.SimpleCSSSelector(const selector:String):IHtmlElementList;
 var
   r:TIHtmlElementList;
 begin
@@ -2003,7 +1997,7 @@ begin
 end;
 
 
-function THtmlElement.Find(const selector:WideString):IHtmlElementList;
+function THtmlElement.Find(const selector:String):IHtmlElementList;
 begin
   Result := SimpleCSSSelector(selector);
 end;
@@ -2012,7 +2006,7 @@ end;
 function XPathToCSSSelector(const AXPath:string):string; forward;
 
 
-function THtmlElement.FindX(const AXPath:WideString):IHtmlElementList;
+function THtmlElement.FindX(const AXPath:String):IHtmlElementList;
 begin
   Result := SimpleCSSSelector(XPathToCSSSelector(AXPath));
 end;
