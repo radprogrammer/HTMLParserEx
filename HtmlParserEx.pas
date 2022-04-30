@@ -416,7 +416,6 @@ end;
 function _aoBeginWord(const Item:TAttrSelectorItem; E:THtmlElement):Boolean;
 var
   S:TStringDynArray;
-  I:Integer;
 begin
   Result := false;
   if not E.FAttributes.ContainsKey(Item.Key) then
@@ -567,7 +566,6 @@ end;
 
 function CreateTagElement(AOwner:THtmlElement; AText:string; ALine, ACol:Integer):THtmlElement;
 var
-  Strs:TStringDynArray;
   I:Integer;
   Attrs:TAttributeDynArray;
 begin
@@ -710,7 +708,6 @@ var
     PreIsblique:Boolean;
   begin
     oldIndex := sc.CharIndex;
-    stringChar := #0;
     sc.SkipBlank();
     if sc.subStr(4) = '<!--' then
     begin
@@ -812,7 +809,6 @@ begin
   sc.setCode(Source);
   while sc.CharIndex <= high(sc.SourceCode) do
   begin
-    ElementType := EtUnknow;
     OldCodeIndex := sc.CharIndex;
     BeginLineNum := sc.LineNum;
     BeginColNum := sc.ColNum;
@@ -980,7 +976,6 @@ var
   E:THtmlElement;
   T:THtmlElement;
   FoundIndex:Integer;
-  TagProperty:WORD;
 begin
   Result := THtmlElement.Create(nil, '', 0, 0);
   Result.FTagName := '#DOCUMENT';
@@ -990,7 +985,7 @@ begin
   while I < ElementList.Count do
   begin
     E := ElementList[I] as THtmlElement;
-    TagProperty := GetTagProperty(E.FTagName);
+    //TagProperty := GetTagProperty(E.FTagName);
     // Empty node, look down, if the next node with Tag is not its closed node, then automatically close
     FoundIndex := -1;
     if E.FIsCloseTag then
@@ -1245,7 +1240,7 @@ var
 
 function GetTagProperty(const TagName:string):WORD;
 var
-  Key, S:string;
+  Key:string;
 begin
   Result := 0;
   Key := UpperCase(TagName);
@@ -1426,7 +1421,6 @@ var
 
 
 var
-  Tag:string;
   pitems:PCSSSelectorItems;
   pItem:PCSSSelectorItem;
 begin
