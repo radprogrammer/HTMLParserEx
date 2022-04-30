@@ -1,5 +1,6 @@
-﻿# htmlparser
-delphi html parser
+﻿# HTMLParserEx
+
+Delphi HTML Parser
 
 April 28, 2022 Forked from https://github.com/edwinyzh/htmlparser
 Translated Chinese strings/comments to English via Google Translate
