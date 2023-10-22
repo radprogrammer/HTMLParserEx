@@ -40,7 +40,8 @@ type
     function GetContent: String; stdcall;
     function GetOrignal: String; stdcall;
     function GetChildrenCount: Integer; stdcall;
-    function GetChildren(Index: Integer): IHtmlElement; stdcall;
+    function GetChildren(Index: Integer): IHtmlElement; overload; stdcall;
+    function GetChildren: IHtmlElementList; overload; stdcall;
     function GetCloseTag: IHtmlElement; stdcall;
     function GetInnerHtml(): String; stdcall;
     function GetOuterHtml(): String; stdcall;
@@ -87,6 +88,7 @@ type
     property Attributes[Key: String]: String read GetAttributes
       write SetAttributes;
     property Attributes: TStringDictionary read GetAttributes;
+    property Children: IHTMLElementList read GetChildren;
     // ying32 does not change the original, just simplifies the use
     property Attrs[Key: String]: String read GetAttributes write SetAttributes;
   end;
@@ -204,8 +206,6 @@ type
   THtmlElementList = TList<THtmlElement>;
 
   THtmlElement = class(TInterfacedObject, IHtmlElement)
-  private
-    function GetChildrens: IHtmlElementList;
   protected
     // ying32
     function GetParent: IHtmlElement; stdcall;
@@ -214,7 +214,8 @@ type
     function GetContent: String; stdcall;
     function GetOrignal: String; stdcall;
     function GetChildrenCount: Integer; stdcall;
-    function GetChildren(Index: Integer): IHtmlElement; stdcall;
+    function GetChildren(Index: Integer): IHtmlElement; overload; stdcall;
+    function GetChildren: IHtmlElementList; overload; stdcall;
     function GetCloseTag: IHtmlElement; stdcall;
     function GetInnerHtml(): String; stdcall;
     function GetOuterHtml(): String; stdcall;
@@ -260,7 +261,6 @@ type
     property InnerText: String read GetInnerText;
     property Attributes[Key: String]: String read GetAttributes
       write SetAttributes;
-    property Childrens: IHtmlElementList read GetChildrens;
   private
     FClosed: Boolean;
     //
@@ -1830,14 +1830,14 @@ begin
   Result := FChildren[index];
 end;
 
+function THtmlElement.GetChildren: IHtmlElementList;
+begin
+  Result := FChildren;
+end;
+
 function THtmlElement.GetChildrenCount: Integer;
 begin
   Result := FChildren.Count;
-end;
-
-function THtmlElement.GetChildrens: IHtmlElementList;
-begin
-  Result := FChildren;
 end;
 
 function THtmlElement.GetCloseTag: IHtmlElement;
