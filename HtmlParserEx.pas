@@ -30,6 +30,8 @@ type
   TElementEachEvent = reference to procedure(AIndex: Integer;
     AEl: IHtmlElement);
 
+  TStringDictionary = TDictionary<string, string>;
+
   IHtmlElement = interface
     ['{8C75239C-8CFA-499F-B115-7CEBEDFB421B}']
     function GetParent: IHtmlElement; stdcall;
@@ -44,7 +46,8 @@ type
     function GetOuterHtml(): String; stdcall;
     function GetInnerText(): String; stdcall;
     procedure SetInnerText(Value: String); stdcall;
-    function GetAttributes(Key: String): String; stdcall;
+    function GetAttributes(Key: String): String; overload; stdcall;
+    function GetAttributes: TStringDictionary; overload; stdcall;
     procedure SetAttributes(Key: String; Value: String); stdcall;
     procedure RemoveAttr(AAttrName: string); stdcall;
     function GetSourceLineNum(): Integer; stdcall;
@@ -83,6 +86,7 @@ type
     property Text: String read GetInnerText write SetInnerText;
     property Attributes[Key: String]: String read GetAttributes
       write SetAttributes;
+    property Attributes: TStringDictionary read GetAttributes;
     // ying32 does not change the original, just simplifies the use
     property Attrs[Key: String]: String read GetAttributes write SetAttributes;
   end;
@@ -121,7 +125,6 @@ uses
   StrUtils;
 
 type
-  TStringDictionary = TDictionary<string, string>;
   TPropDictionary = TDictionary<string, WORD>;
   TStringDynArray = TArray<string>;
 
@@ -217,7 +220,8 @@ type
     function GetOuterHtml(): String; stdcall;
     function GetInnerText(): String; stdcall;
     procedure SetInnerText(Value: String); stdcall;
-    function GetAttributes(Key: String): String; stdcall;
+    function GetAttributes(Key: String): String; overload; stdcall;
+    function GetAttributes: TStringDictionary; overload; stdcall;
     procedure SetAttributes(Key: String; Value: String); stdcall;
     procedure RemoveAttr(AAttrName: string); stdcall;
     function GetSourceLineNum(): Integer; stdcall;
@@ -1814,6 +1818,11 @@ begin
   Key := LowerCase(Key);
   if FAttributes.ContainsKey(Key) then
     Result := FAttributes[Key];
+end;
+
+function THtmlElement.GetAttributes: TStringDictionary;
+begin
+  Result := FAttributes;
 end;
 
 function THtmlElement.GetChildren(Index: Integer): IHtmlElement;
