@@ -2,6 +2,9 @@
 
 Delphi HTML Parser
 
+October 22, 2023 Exposed Attributes and Children properties of IHTMLElement
+for convenience
+
 April 28, 2022 Forked from https://github.com/edwinyzh/htmlparser
 Translated Chinese strings/comments to English via Google Translate
 
